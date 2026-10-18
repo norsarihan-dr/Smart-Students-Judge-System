@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Students Judge System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --secondary: #8B5CF6;
+            --bg: #0F172A;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #F8FAFC;
+            --text-sub: #94A3B8;
+            --success: #10B981;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; background: linear-gradient(to right, #818CF8, #C084FC); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.subtitle { color: var(--text-sub); font-size: 14px; text-align: center; margin-bottom: 24px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-sub); }
+        
+        select, textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+        select option { background: var(--bg); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--primary); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* --- DASHBOARD --- */
+        #dashboard { display: none; padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; }
+        
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 24px;
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+        .judge-info h2 { font-size: 18px; margin-bottom: 4px; }
+        .judge-info p { font-size: 13px; color: var(--secondary); font-weight: 600; }
+        .btn-logout { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+        .presenter-list { display: flex; flex-direction: column; gap: 16px; }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            animation: slideUp 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .card:hover { border-color: rgba(255,255,255,0.2); transform: translateX(4px); }
+        
+        .card-info { flex: 1; padding-right: 16px; }
+        .card-time { font-size: 12px; color: var(--secondary); font-weight: 700; margin-bottom: 4px; display: inline-block; background: rgba(139, 92, 246, 0.1); padding: 2px 8px; border-radius: 4px; }
+        .card-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .card-title { font-size: 13px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .btn-rate {
+            padding: 10px 20px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818CF8;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .btn-rate:hover { background: var(--primary); color: white; }
+        .btn-rate.done { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.3); cursor: default; }
+
+        /* --- MODAL RATING --- */
+        #modal-rating {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 32px;
+            animation: scaleUp 0.3s ease-out;
+        }
+        .modal-header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .modal-header h3 { font-size: 20px; margin-bottom: 8px; }
+        .modal-header p { font-size: 13px; color: var(--text-sub); }
+
+        .criteria-item { margin-bottom: 24px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid transparent; transition: border 0.3s; }
+        .criteria-item.error { border-color: #EF4444; }
+        .criteria-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .criteria-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 12px; }
+        
+        .rating-buttons { display: flex; gap: 8px; justify-content: space-between; }
+        .rating-buttons button {
+            flex: 1;
+            padding: 12px 0;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rating-buttons button:hover { border-color: var(--primary); color: white; }
+        .rating-buttons button.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+
+        .modal-actions { display: flex; gap: 12px; margin-top: 32px; }
+        .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-sub); }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); box-shadow: none; transform: none; }
+
+        /* --- LOADER & TOAST --- */
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 999; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        
+        .footer { text-align: center; padding: 40px 20px; margin-top: auto; font-size: 12px; color: var(--text-sub); border-top: 1px solid var(--border); }
+        .footer strong { color: var(--text-main); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- LOADER -->
+    <div id="loader"><div class="spinner"></div><p>Memproses...</p></div>
+
+    <!-- SKRIN LOGIN -->
+    <div id="login-screen">
+        <div class="glass-card">
+            <h1>Smart Students Judge</h1>
+            <p class="subtitle">Sistem Penilaian Pembentangan Penyelidikan</p>
+            
+            <div class="form-group">
+                <label>Pilih Bilik Pembentangan</label>
+                <select id="select-room" onchange="loadJudges()">
+                    <option value="">-- Sila Pilih Bilik --</option>
+                    <option value="DEWAN MUHIBBAH">Dewan Muhibbah</option>
+                    <option value="DEWAN ILMU">Dewan Ilmu</option>
+                    <option value="BILIK MIKRO">Bilik Mikro</option>
+                    <option value="PK206">PK206</option>
+                    <option value="PK207">PK207</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Pilih Nama Penilai</label>
+                <select id="select-judge">
+                    <option value="">-- Pilih Bilik Dahulu --</option>
+                </select>
+            </div>
+
+            <button class="btn" onclick="login()">Mula Menilai</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD PENILAI -->
+    <div id="dashboard">
+        <div class="header-bar">
+            <div class="judge-info">
+                <h2 id="ui-judge-name">Nama Penilai</h2>
+                <p id="ui-room-name">Bilik</p>
+            </div>
+            <button class="btn-logout" onclick="logout()">Log Keluar</button>
+        </div>
+
+        <div class="presenter-list" id="presenter-list">
+            <!-- Kad pembentang akan dijana di sini -->
+        </div>
+    </div>
+
+    <!-- MODAL PENILAIAN -->
+    <div id="modal-rating">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="m-presenter-name">Nama Pembentang</h3>
+                <p id="m-presenter-title">Tajuk Kajian</p>
+            </div>
+            
+            <div id="criteria-container">
+                <!-- Borang rubrik akan dijana di sini -->
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <label>Komen / Ulasan Tambahan (Pilihan)</label>
+                <textarea id="m-comment" rows="3" placeholder="Berikan ulasan membina..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn" id="btn-submit" onclick="submitScores()">Hantar Markah</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2026 PEDATED. Developed by <strong>Dr. Norsarihan bin Ahmad</strong>.
+    </div>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI (TUKAR BAHAGIAN INI)
+        // ==========================================
+        const API_URL = 'URL_APPS_SCRIPT_ANDA_DI_SINI'; // <--- TUKAR DENGAN URL /EXEC BAHARU
+        const API_TOKEN = 'test123'; // <--- PASTIKAN SAMA DENGAN CODE.GS
+
+        // ==========================================
+        // STATE SISTEM
+        // ==========================================
+        let state = {
+            room: '',
+            judge: { id: '', name: '' },
+            presenters: [],
+            criteria: [],
+            scoredPresenters: new Set(),
+            currentPresenter: null,
+            scores: {} 
+        };
+
+        // ==========================================
+        // FUNGSI API
+        // ==========================================
+        async function apiGet(params) {
+            const qs = new URLSearchParams({ token: API_TOKEN, ...params });
+            const res = await fetch(`${API_URL}?${qs}`);
+            return res.json();
+        }
+
+        async function apiPost(payload) {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ token: API_TOKEN, ...payload })
+            });
+            return res.json();
+        }
+
+        // ==========================================
+        // LOGIK LOGIN
+        // ==========================================
+        async function loadJudges() {
+            const room = document.getElementById('select-room').value;
+            const judgeSelect = document.getElementById('select-judge');
+            
+            if (!room) {
+                judgeSelect.innerHTML = '<option value="">-- Pilih Bilik Dahulu --</option>';
+                return;
+            }
+
+            judgeSelect.innerHTML = '<option value="">Memuatkan...</option>';
+            try {
+                const data = await apiGet({ action: 'judges', room: room });
+                if (data.error) throw new Error(data.error);
+                
+                judgeSelect.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
+                data.judges.forEach(j => {
+                    judgeSelect.innerHTML += `<option value="${j.id}" data-name="${j.name}">${j.name}</option>`;
+                });
+            } catch (err) {
+                alert('Ralat memuatkan nama: ' + err.message);
+            }
+        }
+
+        async function login() {
+            const room = document.getElementById('select-room').value;
+            const judgeSelect = document.getElementById('select-judge');
+            const judgeId = judgeSelect.value;
+            const judgeName = judgeSelect.options[judgeSelect.selectedIndex]?.dataset.name;
+
+            if (!room || !judgeId) return alert('Sila pilih bilik dan nama anda.');
+
+            showLoader(true);
+            try {
+                const [configData, presenterData, statusData] = await Promise.all([
+                    apiGet({ action: 'config' }),
+                    apiGet({ action: 'presenters', room: room }),
+                    apiGet({ action: 'checkStatus', judgeId: judgeId, room: room })
+                ]);
+
+                if (configData.error) throw new Error(configData.error);
+
+                state.room = room;
+                state.judge = { id: judgeId, name: judgeName };
+                state.criteria = configData.criteria;
+                state.presenters = presenterData.presenters;
+                state.scoredPresenters = new Set(statusData.scored);
+
+                document.getElementById('ui-judge-name').textContent = judgeName;
+                document.getElementById('ui-room-name').textContent = room;
+                
+                renderPresenters();
+                
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+            } catch (err) {
+                alert('Ralat sistem: ' + err.message);
+            } finally {
+                showLoader(false);
+            }
+        }
+
+        function logout() {
+            state = { room: '', judge: { id: '', name: '' }, presenters: [], criteria: [], scoredPresenters: new Set(), currentPresenter: null, scores: {} };
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('select-room').value = '';
+            document.getElementById('select-judge').innerHTML = '<option value="">-- Pilih Bilik Dahulu --</option>';
+        }
+
+        // ==========================================
+        // PAPARAN DASHBOARD
+        // ==========================================
+        function renderPresenters() {
+            const list = document.getElementById('presenter-list');
+            list.innerHTML = '';
+
+            state.presenters.forEach((p, index) => {
+                const isDone = state.scoredPresenters.has(p.id);
+                const delay = index * 0.05;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.animationDelay = `${delay}s`;
+                
+                card.innerHTML = `
+                    <div class="card-info">
+                        <span class="card-time">${p.masa} (${p.sesi})</span>
+                        <div class="card-name">${p.name}</div>
+                        <div class="card-title">${p.title}</div>
+                    </div>
+                    <button class="btn-rate ${isDone ? 'done' : ''}" 
+                            onclick="${isDone ? '' : `openRating('${p.id}')`}">
+                        ${isDone ? '✓ Selesai' : 'Nilai'}
+                    </button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // ==========================================
+        // MODAL PENILAIAN
+        // ==========================================
+        function openRating(presenterId) {
+            const p = state.presenters.find(x => x.id === presenterId);
+            if (!p) return;
+
+            state.currentPresenter = p;
+            state.scores = {};
+
+            document.getElementById('m-presenter-name').textContent = p.name;
+            document.getElementById('m-presenter-title').textContent = p.title;
+            document.getElementById('m-comment').value = '';
+
+            const container = document.getElementById('criteria-container');
+            container.innerHTML = '';
+
+            const rubrics = { A: 'Kualiti Penyelidikan', B: 'Kemahiran Penyampaian', C: 'Sesi Soal Jawab' };
+            
+            Object.keys(rubrics).forEach(code => {
+                const items = state.criteria.filter(c => c.rubric === code);
+                if (items.length === 0) return;
+
+                let html = `<div style="margin-top: 24px; margin-bottom: 12px; font-weight: 700; font-size: 14px; color: var(--secondary); text-transform: uppercase; letter-spacing: 1px;">Rubrik ${code}: ${rubrics[code]}</div>`;
+
+                items.forEach(c => {
+                    html += `
+                        <div class="criteria-item" id="crit-${c.id}">
+                            <div class="criteria-name">${c.name}</div>
+                            <div class="criteria-desc">${c.desc}</div>
+                            <div class="rating-buttons">
+                                ${[1,2,3,4,5].map(v => `<button type="button" onclick="setScore('${c.id}', ${v})" id="btn-${c.id}-${v}">${v}</button>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML += html;
+            });
+
+            document.getElementById('modal-rating').style.display = 'block';
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function setScore(criteriaId, val) {
+            state.scores[criteriaId] = val;
+            
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`btn-${criteriaId}-${i}`).classList.remove('active');
+            }
+            document.getElementById(`btn-${criteriaId}-${val}`).classList.add('active');
+            document.getElementById(`crit-${criteriaId}`).classList.remove('error');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-rating').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            state.currentPresenter = null;
+        }
+
+        // ==========================================
+        // HANTAR MARKAH
+        // ==========================================
+        async function submitScores() {
+            if (!state.currentPresenter) return;
+
+            let isComplete = true;
+            state.criteria.forEach(c => {
+                if (!state.scores[c.id]) {
+                    document.getElementById(`crit-${c.id}`).classList.add('error');
+                    isComplete = false;
+                }
+            });
+
+            if (!isComplete) {
+                return alert('Sila berikan markah untuk semua kriteria yang bertanda merah.');
+            }
+
+            const payload = {
+                action: 'submitScores',
+                data: {
+                    judgeId: state.judge.id,
+                    presenterId: state.currentPresenter.id,
+                    scores: Object.keys(state.scores).map(id => ({ id, val: state.scores[id] })),
+                    comment: document.getElementById('m-comment').value
+                }
+            };
+
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = true;
+            btn.textContent = 'Menyimpan...';
+
+            try {
+                const res = await apiPost(payload);
+                if (res.error) throw new Error(res.error);
+
+                alert('✅ Markah berjaya dihantar!');
+                
+                state.scoredPresenters.add(state.currentPresenter.id);
+                renderPresenters();
+                closeModal();
+            } catch (err) {
+                alert('Ralat menghantar markah: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Hantar Markah';
+            }
+        }
+
+        // ==========================================
+        // UTILITY
+        // ==========================================
+        function showLoader(show) {
+            document.getElementById('loader').style.display = show ? 'flex' : 'none';
+        }
+    </script>
+</body>
+</html>
