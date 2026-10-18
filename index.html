@@ -2,49 +2,64 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Smart Students Judge System</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366F1;
-            --primary-hover: #4F46E5;
-            --secondary: #8B5CF6;
-            --bg: #0F172A;
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --text-main: #F8FAFC;
+            --primary: #4F46E5; /* Indigo */
+            --secondary: #9333EA; /* Purple */
+            --bg-fallback: #060b19;
+            --card-bg: rgba(10, 20, 45, 0.75);
+            --text-main: #FFFFFF;
             --text-sub: #94A3B8;
             --success: #10B981;
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(99, 102, 241, 0.3);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
         
+        /* --- BACKGROUND POSTER SETTINGS --- */
         body {
-            background-color: var(--bg);
+            background-color: var(--bg-fallback);
             color: var(--text-main);
             min-height: 100vh;
+            min-height: 100svh; /* Untuk mobile browser */
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+            position: relative;
         }
 
-        /* --- LOGO SETTING --- */
-        .logo-container { text-align: center; margin-bottom: 24px; }
-        .logo-container img { max-width: 120px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+        /* Lapisan latar belakang poster dengan blur & overlay gelap */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* TUKAR NAMA FAIL DI SINI JIKA PERLU (contoh: url('poster.png')) */
+            background-image: 
+                linear-gradient(to bottom, rgba(6, 11, 25, 0.5), rgba(6, 11, 25, 0.85)),
+                url('poster.jpg'); 
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            z-index: -1;
+            /* Filter blur untuk desktop sahaja supaya tidak terlalu tajam */
+            filter: blur(2px); 
+            transform: scale(1.05); /* Elak garis putih di tepi blur */
+        }
 
         /* --- SCREENS --- */
         #login-screen, #admin-login-screen {
-            display: none; /* Default hidden, diurus oleh JS */
+            display: none;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
+            flex: 1;
+            padding: 20px 16px;
+            width: 100%;
         }
 
+        /* --- LOGIN CARD (GLASSMORPHISM) --- */
         .glass-card {
             background: var(--card-bg);
             backdrop-filter: blur(16px);
@@ -53,51 +68,87 @@
             border-radius: 24px;
             padding: 32px;
             width: 100%;
-            max-width: 420px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 20px rgba(79, 70, 229, 0.2);
             animation: fadeIn 0.6s ease-out;
+            position: relative;
+            z-index: 1;
         }
 
-        h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; text-align: center; background: linear-gradient(to right, #818CF8, #C084FC); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        p.subtitle { color: var(--text-sub); font-size: 14px; text-align: center; margin-bottom: 24px; }
+        .logo-container { text-align: center; margin-bottom: 24px; }
+        .logo-container img { max-width: 120px; height: auto; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); border-radius: 12px;}
+
+        h1 { 
+            font-size: 26px; font-weight: 700; margin-bottom: 8px; text-align: center; 
+            color: #FFFFFF;
+        }
+        h1 span { color: #A855F7; /* Warna ungu untuk "Judge" */ }
+        p.subtitle { color: var(--text-sub); font-size: 14px; text-align: center; margin-bottom: 28px; }
 
         .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-sub); }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
         
+        /* Ikon kecil di sebelah label */
+        label i { margin-right: 6px; font-style: normal; opacity: 0.8; }
+
         select, textarea, input[type="password"] {
             width: 100%;
             padding: 14px 16px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(15, 23, 42, 0.8);
             border: 1px solid var(--border);
             border-radius: 12px;
             color: white;
             font-size: 15px;
             outline: none;
             transition: all 0.3s;
+            appearance: none; /* Buang anak panah default */
+            -webkit-appearance: none;
         }
-        select:focus, textarea:focus, input[type="password"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
-        select option { background: var(--bg); }
+        
+        /* Custom dropdown arrow */
+        .select-wrapper { position: relative; }
+        .select-wrapper::after {
+            content: '▼';
+            font-size: 10px;
+            color: var(--text-sub);
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
 
+        select:focus, textarea:focus, input[type="password"]:focus { 
+            border-color: #A855F7; 
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25); 
+        }
+        select option { background: #0F172A; }
+
+        /* Butang Gradient */
         .btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 16px;
+            background: linear-gradient(90deg, #3B82F6 0%, #A855F7 100%);
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--primary); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px #A855F7; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
-        .admin-link { text-align: center; margin-top: 20px; font-size: 12px; color: var(--text-sub); text-decoration: none; display: block; }
-        .admin-link:hover { color: var(--primary); }
+        .admin-link { text-align: center; margin-top: 24px; font-size: 13px; color: var(--text-sub); text-decoration: none; display: block; transition: color 0.2s; }
+        .admin-link:hover { color: var(--text-main); }
 
         /* --- DASHBOARD (PENILAI) --- */
-        #dashboard, #admin-dashboard { display: none; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+        #dashboard, #admin-dashboard { display: none; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; flex: 1; }
         
         .header-bar {
             display: flex;
@@ -112,11 +163,13 @@
             position: sticky;
             top: 20px;
             z-index: 10;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
         }
-        .header-bar img { max-height: 40px; }
-        .judge-info h2 { font-size: 18px; margin-bottom: 4px; }
-        .judge-info p { font-size: 13px; color: var(--secondary); font-weight: 600; }
-        .btn-logout { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .header-bar img { max-height: 40px; border-radius: 6px; }
+        .judge-info h2 { font-size: 18px; margin-bottom: 4px; color: white; }
+        .judge-info p { font-size: 13px; color: #A855F7; font-weight: 600; }
+        .btn-logout { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.4); color: white; }
 
         .presenter-list { display: flex; flex-direction: column; gap: 16px; }
         .card {
@@ -131,62 +184,99 @@
             animation: slideUp 0.5s ease-out forwards;
             opacity: 0;
             transform: translateY(20px);
+            backdrop-filter: blur(10px);
         }
-        .card:hover { border-color: rgba(255,255,255,0.2); transform: translateX(4px); }
+        .card:hover { border-color: rgba(168, 85, 247, 0.5); transform: translateX(4px); box-shadow: 0 10px 20px -10px rgba(168, 85, 247, 0.2); }
         
         .card-info { flex: 1; padding-right: 16px; }
-        .card-time { font-size: 12px; color: var(--secondary); font-weight: 700; margin-bottom: 4px; display: inline-block; background: rgba(139, 92, 246, 0.1); padding: 2px 8px; border-radius: 4px; }
-        .card-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .card-time { font-size: 12px; color: #A855F7; font-weight: 700; margin-bottom: 4px; display: inline-block; background: rgba(168, 85, 247, 0.15); padding: 4px 10px; border-radius: 6px; }
+        .card-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: white; }
         .card-title { font-size: 13px; color: var(--text-sub); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
         .btn-rate {
             padding: 10px 20px;
-            background: rgba(99, 102, 241, 0.1);
-            color: #818CF8;
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            background: rgba(59, 130, 246, 0.1);
+            color: #60A5FA;
+            border: 1px solid rgba(59, 130, 246, 0.3);
             border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
             transition: all 0.2s;
         }
-        .btn-rate:hover { background: var(--primary); color: white; }
-        .btn-rate.done { background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.3); cursor: default; }
+        .btn-rate:hover { background: #3B82F6; color: white; }
+        .btn-rate.done { background: rgba(16, 185, 129, 0.15); color: var(--success); border-color: rgba(16, 185, 129, 0.3); cursor: default; }
 
         /* --- ADMIN DASHBOARD --- */
         .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .admin-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; }
-        .admin-panel h3 { font-size: 18px; margin-bottom: 12px; }
+        .admin-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; backdrop-filter: blur(10px); }
+        .admin-panel h3 { font-size: 18px; margin-bottom: 12px; color: white; }
         .admin-panel p { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; }
 
         /* --- MODAL RATING --- */
-        #modal-rating { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); z-index: 100; overflow-y: auto; padding: 20px; }
-        .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; max-width: 600px; margin: 40px auto; padding: 32px; animation: scaleUp 0.3s ease-out; }
+        #modal-rating { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6, 11, 25, 0.9); backdrop-filter: blur(8px); z-index: 100; overflow-y: auto; padding: 20px; }
+        .modal-content { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; max-width: 600px; margin: 40px auto; padding: 32px; animation: scaleUp 0.3s ease-out; backdrop-filter: blur(20px); }
         .modal-header { margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
-        .modal-header h3 { font-size: 20px; margin-bottom: 8px; }
+        .modal-header h3 { font-size: 20px; margin-bottom: 8px; color: white; }
         .modal-header p { font-size: 13px; color: var(--text-sub); }
-        .criteria-item { margin-bottom: 24px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid transparent; transition: border 0.3s; }
+        
+        .criteria-item { margin-bottom: 24px; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid transparent; transition: border 0.3s; }
         .criteria-item.error { border-color: #EF4444; }
-        .criteria-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .criteria-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; color: white; }
         .criteria-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 12px; }
+        
         .rating-buttons { display: flex; gap: 8px; justify-content: space-between; }
-        .rating-buttons button { flex: 1; padding: 12px 0; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); color: var(--text-sub); border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-        .rating-buttons button:hover { border-color: var(--primary); color: white; }
-        .rating-buttons button.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .rating-buttons button {
+            flex: 1;
+            padding: 12px 0;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .rating-buttons button:hover { border-color: #A855F7; color: white; }
+        .rating-buttons button.active { background: #A855F7; color: white; border-color: #A855F7; box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); }
+
         .modal-actions { display: flex; gap: 12px; margin-top: 32px; }
         .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text-sub); }
-        .btn-cancel:hover { background: rgba(255,255,255,0.05); box-shadow: none; transform: none; }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); box-shadow: none; transform: none; color: white; }
 
         /* --- LOADER & FOOTER --- */
-        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); z-index: 999; justify-content: center; align-items: center; flex-direction: column; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
-        .footer { text-align: center; padding: 40px 20px; margin-top: auto; font-size: 12px; color: var(--text-sub); border-top: 1px solid var(--border); }
-        .footer strong { color: var(--text-main); }
+        #loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(6, 11, 25, 0.8); backdrop-filter: blur(4px); z-index: 999; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top-color: #A855F7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        
+        .footer { text-align: center; padding: 40px 20px; margin-top: auto; font-size: 12px; color: var(--text-sub); z-index: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .footer strong { color: #FFFFFF; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
         @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 600px) {
+            body::before {
+                /* Pada mobile, fokus pada bahagian tengah poster dan kurangkan blur */
+                background-position: center 20%;
+                filter: blur(1px);
+            }
+            .glass-card {
+                padding: 24px 20px;
+                margin: 10px auto;
+                border-radius: 20px;
+            }
+            h1 { font-size: 22px; }
+            p.subtitle { font-size: 13px; margin-bottom: 20px; }
+            .logo-container img { max-width: 90px; margin-bottom: -10px; }
+            .header-bar { flex-direction: column; align-items: flex-start; gap: 12px; position: relative; top: 0; }
+            .btn-logout { align-self: flex-end; margin-top: -40px; }
+            .card { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .btn-rate { width: 100%; text-align: center; padding: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -197,28 +287,33 @@
     <div id="login-screen" style="display: flex;">
         <div class="glass-card">
             <div class="logo-container">
-                <!-- TUKAR NAMA FAIL LOGO DI SINI -->
-                <img src="logo.png" alt="Logo Institut" onerror="this.style.display='none'">
+                <img src="logo.png?v=2" alt="Logo IPG" onerror="this.style.display='none'">
             </div>
-            <h1>Smart Students Judge</h1>
+            <h1>Smart Students <span>Judge</span></h1>
             <p class="subtitle">Sistem Penilaian Pembentangan Penyelidikan</p>
             
             <div class="form-group">
-                <label>Pilih Bilik Pembentangan</label>
-                <select id="select-room" onchange="loadJudges()">
-                    <option value="">-- Sila Pilih Bilik --</option>
-                    <option value="DEWAN MUHIBBAH">Dewan Muhibbah</option>
-                    <option value="DEWAN ILMU">Dewan Ilmu</option>
-                    <option value="BILIK MIKRO">Bilik Mikro</option>
-                    <option value="PK206">PK206</option>
-                    <option value="PK207">PK207</option>
-                </select>
+                <label><i>🏠</i> Pilih Bilik Pembentangan</label>
+                <div class="select-wrapper">
+                    <select id="select-room" onchange="loadJudges()">
+                        <option value="">-- Sila Pilih Bilik --</option>
+                        <option value="DEWAN MUHIBBAH">Dewan Muhibbah</option>
+                        <option value="DEWAN ILMU">Dewan Ilmu</option>
+                        <option value="BILIK MIKRO">Bilik Mikro</option>
+                        <option value="PK206">PK206</option>
+                        <option value="PK207">PK207</option>
+                    </select>
+                </div>
             </div>
             <div class="form-group">
-                <label>Pilih Nama Penilai</label>
-                <select id="select-judge"><option value="">-- Pilih Bilik Dahulu --</option></select>
+                <label><i>👤</i> Pilih Nama Penilai</label>
+                <div class="select-wrapper">
+                    <select id="select-judge"><option value="">-- Pilih Bilik Dahulu --</option></select>
+                </div>
             </div>
-            <button class="btn" onclick="login()">Mula Menilai</button>
+            <button class="btn" onclick="login()">
+                <span>▶</span> Mula Menilai
+            </button>
             
             <!-- PAUTAN KE ADMIN -->
             <a href="#admin" class="admin-link">Log Masuk Admin</a>
@@ -229,9 +324,9 @@
     <div id="admin-login-screen">
         <div class="glass-card">
             <div class="logo-container">
-                <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+                <img src="logo.png?v=2" alt="Logo IPG" onerror="this.style.display='none'">
             </div>
-            <h1>Akses Admin</h1>
+            <h1>Akses <span>Admin</span></h1>
             <p class="subtitle">Sila masukkan kata laluan pengurus sistem.</p>
             <div class="form-group">
                 <label>Kata Laluan</label>
@@ -246,7 +341,7 @@
     <div id="dashboard">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:16px;">
-                <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+                <img src="logo.png?v=2" alt="Logo" onerror="this.style.display='none'">
                 <div class="judge-info">
                     <h2 id="ui-judge-name">Nama Penilai</h2>
                     <p id="ui-room-name">Bilik</p>
@@ -261,9 +356,9 @@
     <div id="admin-dashboard">
         <div class="header-bar">
             <div style="display:flex; align-items:center; gap:16px;">
-                <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+                <img src="logo.png?v=2" alt="Logo" onerror="this.style.display='none'">
                 <div class="judge-info">
-                    <h2>Panel Pentadbir (Admin)</h2>
+                    <h2>Panel Pentadbir</h2>
                     <p>Kawalan Sistem SSJS</p>
                 </div>
             </div>
@@ -279,7 +374,7 @@
             <div class="admin-panel">
                 <h3>📈 Statistik</h3>
                 <p>Lihat jumlah pembentang dan penilai yang telah selesai.</p>
-                <button class="btn" onclick="adminViewStats()">Lihat Statistik</button>
+                <button class="btn" onclick="alert('Ciri ini akan datang tidak lama lagi!')">Lihat Statistik</button>
             </div>
         </div>
     </div>
@@ -308,17 +403,21 @@
     </div>
 
     <script>
-        // KONFIGURASI
+        // ==========================================
+        // KONFIGURASI (TUKAR JIKA PERLU)
+        // ==========================================
         const API_URL = 'https://script.google.com/macros/s/AKfycbybUTEJbuCrEyr8v3DEcPExkXT-TCx_E8VABXqSdUAwq-LPCucszX1JWKLt32VM7Sbm/exec'; 
         const API_TOKEN = 'ssjs_2026_norsarihan'; 
 
+        // ==========================================
+        // STATE SISTEM & FUNGSI ASAS
+        // ==========================================
         let state = { room: '', judge: { id: '', name: '' }, presenters: [], criteria: [], scoredPresenters: new Set(), currentPresenter: null, scores: {} };
 
-        // FUNGSI API
         async function apiGet(params) { const qs = new URLSearchParams({ token: API_TOKEN, ...params }); const res = await fetch(`${API_URL}?${qs}`); return res.json(); }
         async function apiPost(payload) { const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ token: API_TOKEN, ...payload }) }); return res.json(); }
 
-        // URUSAN ROUTING (URL HASH)
+        // ROUTING (URL HASH UNTUK ADMIN)
         function router() {
             const hash = window.location.hash;
             document.getElementById('login-screen').style.display = 'none';
@@ -394,7 +493,7 @@
             const rubrics = { A: 'Kualiti Penyelidikan', B: 'Kemahiran Penyampaian', C: 'Sesi Soal Jawab' };
             Object.keys(rubrics).forEach(code => {
                 const items = state.criteria.filter(c => c.rubric === code); if (items.length === 0) return;
-                let html = `<div style="margin-top: 24px; margin-bottom: 12px; font-weight: 700; font-size: 14px; color: var(--secondary); text-transform: uppercase;">Rubrik ${code}: ${rubrics[code]}</div>`;
+                let html = `<div style="margin-top: 24px; margin-bottom: 12px; font-weight: 700; font-size: 14px; color: #A855F7; text-transform: uppercase; letter-spacing: 1px;">Rubrik ${code}: ${rubrics[code]}</div>`;
                 items.forEach(c => {
                     html += `<div class="criteria-item" id="crit-${c.id}"><div class="criteria-name">${c.name}</div><div class="criteria-desc">${c.desc}</div><div class="rating-buttons">${[1,2,3,4,5].map(v => `<button type="button" onclick="setScore('${c.id}', ${v})" id="btn-${c.id}-${v}">${v}</button>`).join('')}</div></div>`;
                 });
